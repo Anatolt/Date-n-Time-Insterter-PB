@@ -1,10 +1,11 @@
-﻿; #VK_MEDIA_PLAY_PAUSE=$B3
+﻿#myname = "Date-n-time-inserter-v0.2"
 
 Structure _GlobalHotkeys
  window.l
  event.l
 EndStructure
 Global NewList GlobalHotkeys._GlobalHotkeys()
+appname.s = GetFilePart(ProgramFilename())
 
 Procedure AddGlobalHotkey(window,event,modifiers,vk)
 Define.l result
@@ -39,6 +40,9 @@ Procedure RemoveAllGlobalHotkeys()
 EndProcedure
 
 Procedure pasteStuff()
+;   Repeat 
+;     Delay(10)
+;   Until #WM_KEYDOWN
   Delay(1000)
   Define n.INPUT
   n\type = #INPUT_KEYBOARD
@@ -57,8 +61,7 @@ Procedure WindowCallback(hwnd,msg,wparam,lparam)
   result=#PB_ProcessPureBasicEvents
   Select msg 
     Case #WM_HOTKEY
-      pasteStuff()
-      Debug FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss",Date())
+      Debug pasteStuff()
 ;       If wparam=#VK_MEDIA_PLAY_PAUSE
 ;         Debug "#VK_MEDIA_PLAY_PAUSE pressed"
 ;         result=#False
@@ -67,21 +70,29 @@ Procedure WindowCallback(hwnd,msg,wparam,lparam)
   ProcedureReturn result
 EndProcedure 
 
-#Window=1
-
-If OpenWindow(#Window,300,250,400,200,"test",#PB_Window_SystemMenu)
- If AddGlobalHotkey(#Window,#VK_D,#MOD_CONTROL|#MOD_ALT,#VK_D)=#False
+If OpenWindow(0,1,1,1,1,#myname,#PB_Window_Invisible)
+  icon = ExtractIcon_(WindowID(0),appname,0)
+  AddSysTrayIcon(1,WindowID(0),icon)
+  SysTrayIconToolTip(1,#myname)
+  CreatePopupMenu(0)
+  MenuItem(1,#myname)
+  DisableMenuItem(0,1,1)
+  MenuBar()
+  MenuItem(2,"Exit")
+;   textField = EditorGadget(0,0,0,400,200) ; for emidiately test
+ If AddGlobalHotkey(0,#VK_D,#MOD_CONTROL|#MOD_ALT,#VK_D)=#False
   Debug "failed to register hotkey"
  EndIf
  SetWindowCallback(@WindowCallback(),1)
  
  Repeat
-  event=WaitWindowEvent()
- Until event=#PB_Event_CloseWindow
+   ev=WaitWindowEvent()
+     If ev = #PB_Event_SysTray And EventType() = #PB_EventType_RightClick
+    DisplayPopupMenu(0,WindowID(0))
+  ElseIf ev = #PB_Event_Menu And EventMenu() = 2
+    Break
+  EndIf
+ Until ev=#PB_Event_CloseWindow
 EndIf 
 
 RemoveAllGlobalHotkeys()
-; IDE Options = PureBasic 5.31 (Windows - x86)
-; Folding = -
-; EnableUnicode
-; EnableXP
