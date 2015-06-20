@@ -1,22 +1,27 @@
-﻿#myname = "Date-n-time-inserter-v0.2"
+﻿#Myname = "Date-n-time-inserter-v0.3"
+Enumeration
+  #Window
+  #SysTrayIcon
+  #Menu
+EndEnumeration
 
 Structure _GlobalHotkeys
- window.l
- event.l
+  window.l
+  event.l
 EndStructure
 Global NewList GlobalHotkeys._GlobalHotkeys()
 appname.s = GetFilePart(ProgramFilename())
 
 Procedure AddGlobalHotkey(window,event,modifiers,vk)
-Define.l result
- result=RegisterHotKey_(WindowID(window),event,modifiers,vk)
- If result
-  LastElement(GlobalHotkeys())
-  AddElement(GlobalHotkeys())
-  GlobalHotkeys()\window=window
-  GlobalHotkeys()\event=event
- EndIf
- ProcedureReturn result
+  Define.l result
+  result=RegisterHotKey_(WindowID(window),event,modifiers,vk)
+  If result
+    LastElement(GlobalHotkeys())
+    AddElement(GlobalHotkeys())
+    GlobalHotkeys()\window=window
+    GlobalHotkeys()\event=event
+  EndIf
+  ProcedureReturn result
 EndProcedure
 
 ; Procedure RemoveGlobalHotkey(window,event)
@@ -33,20 +38,22 @@ EndProcedure
 ; EndProcedure
 
 Procedure RemoveAllGlobalHotkeys()
- ForEach GlobalHotkeys()
-  UnregisterHotKey_(WindowID(GlobalHotkeys()\window),GlobalHotkeys()\event)
-  DeleteElement(GlobalHotkeys(),0)
- Next
+  ForEach GlobalHotkeys()
+    UnregisterHotKey_(WindowID(GlobalHotkeys()\window),GlobalHotkeys()\event)
+    DeleteElement(GlobalHotkeys(),0)
+  Next
 EndProcedure
 
 Procedure pasteStuff()
-;   Repeat 
-;     Delay(10)
-;   Until #WM_KEYDOWN
-  Delay(1000)
+  ;   Repeat 
+  ;     Delay(10)
+  ;   Until #WM_KEYDOWN
   Define n.INPUT
   n\type = #INPUT_KEYBOARD
-  SetClipboardText(FormatDate("%yyyy.%mm.%dd %hh:%ii",Date()))
+  txt$ = FormatDate("%yyyy.%mm.%dd %hh:%ii",Date())
+  SetClipboardText(txt$)
+  AddGadgetItem(textField,-1,txt$)
+  Delay(1000)
   n\ki\wVk = #VK_CONTROL : n\ki\dwFlags = 0
   SendInput_(1,@n,SizeOf(n))
   n\ki\wVk = #VK_V
@@ -61,38 +68,38 @@ Procedure WindowCallback(hwnd,msg,wparam,lparam)
   result=#PB_ProcessPureBasicEvents
   Select msg 
     Case #WM_HOTKEY
-      Debug pasteStuff()
-;       If wparam=#VK_MEDIA_PLAY_PAUSE
-;         Debug "#VK_MEDIA_PLAY_PAUSE pressed"
-;         result=#False
-;       EndIf
+      pasteStuff()
+      ;       If wparam=#VK_MEDIA_PLAY_PAUSE
+      ;         Debug "#VK_MEDIA_PLAY_PAUSE pressed"
+      ;         result=#False
+      ;       EndIf
   EndSelect
   ProcedureReturn result
 EndProcedure 
 
-If OpenWindow(0,1,1,1,1,#myname,#PB_Window_Invisible)
-  icon = ExtractIcon_(WindowID(0),appname,0)
-  AddSysTrayIcon(1,WindowID(0),icon)
-  SysTrayIconToolTip(1,#myname)
-  CreatePopupMenu(0)
-  MenuItem(1,#myname)
-  DisableMenuItem(0,1,1)
-  MenuBar()
-  MenuItem(2,"Exit")
-;   textField = EditorGadget(0,0,0,400,200) ; for emidiately test
- If AddGlobalHotkey(0,#VK_D,#MOD_CONTROL|#MOD_ALT,#VK_D)=#False
-  Debug "failed to register hotkey"
- EndIf
- SetWindowCallback(@WindowCallback(),1)
- 
- Repeat
-   ev=WaitWindowEvent()
-     If ev = #PB_Event_SysTray And EventType() = #PB_EventType_RightClick
-    DisplayPopupMenu(0,WindowID(0))
+OpenWindow(#Window,0,0,400,200,#Myname,#PB_Window_Invisible) ;#PB_Window_Invisible #PB_Window_SystemMenu
+MessageRequester(#Myname,"Press Ctlr+Alt+D to paste timestamp")
+icon = ExtractIcon_(WindowID(#Window),appname,0)
+AddSysTrayIcon(1,WindowID(#Window),icon)
+SysTrayIconToolTip(#SysTrayIcon,#Myname)
+CreatePopupMenu(#Menu)
+MenuItem(1,#Myname)
+DisableMenuItem(#Menu,1,1)
+MenuBar()
+MenuItem(2,"Exit")
+textField = EditorGadget(0,0,0,400,200)
+If AddGlobalHotkey(#Window,#VK_D,#MOD_CONTROL|#MOD_ALT,#VK_D)=#False
+  MessageRequester(#Myname,"Failed to register hotkey")
+EndIf
+SetWindowCallback(@WindowCallback(),#Window)
+
+Repeat
+  ev=WaitWindowEvent()
+  If ev = #PB_Event_SysTray And EventType() = #PB_EventType_RightClick
+    DisplayPopupMenu(#Menu,WindowID(#Window))
   ElseIf ev = #PB_Event_Menu And EventMenu() = 2
     Break
   EndIf
- Until ev=#PB_Event_CloseWindow
-EndIf 
+Until ev=#PB_Event_CloseWindow
 
 RemoveAllGlobalHotkeys()

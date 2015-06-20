@@ -7,18 +7,19 @@
   <section name="data">
     <explorer view="..\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2015-06-19 11:58" user="Tolik" host="R580"/>
+    <lastopen date="2015-06-20 15:07" user="Tolik" host="R580"/>
   </section>
   <section name="files">
     <file name="dt.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="ac0529f1ed79a0d90ffa3b2e4ce03d77"/>
+      <fingerprint md5="a60e2bbbd6afc4b423856ffda569db58"/>
     </file>
   </section>
   <section name="targets">
     <target name="Default Target" enabled="1" default="1">
       <inputfile value="dt.pb"/>
       <outputfile value="date-and-time-inserter.exe"/>
+      <executable value="date-and-time-inserter.exe"/>
       <options unicode="1" xpskin="1" debug="1"/>
       <icon enable="1">icon.ico</icon>
     </target>
