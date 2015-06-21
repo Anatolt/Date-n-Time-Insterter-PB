@@ -3,6 +3,8 @@ Enumeration
   #Window
   #SysTrayIcon
   #Menu
+  #Exit
+  #change_hk
 EndEnumeration
 
 Structure _GlobalHotkeys
@@ -86,7 +88,8 @@ CreatePopupMenu(#Menu)
 MenuItem(1,#Myname)
 DisableMenuItem(#Menu,1,1)
 MenuBar()
-MenuItem(2,"Exit")
+MenuItem(#change_hk,"Change Hotkey")
+MenuItem(#Exit,"Exit")
 textField = EditorGadget(0,0,0,400,200)
 If AddGlobalHotkey(#Window,#VK_D,#MOD_CONTROL|#MOD_ALT,#VK_D)=#False
   MessageRequester(#Myname,"Failed to register hotkey")
@@ -97,8 +100,13 @@ Repeat
   ev=WaitWindowEvent()
   If ev = #PB_Event_SysTray And EventType() = #PB_EventType_RightClick
     DisplayPopupMenu(#Menu,WindowID(#Window))
-  ElseIf ev = #PB_Event_Menu And EventMenu() = 2
-    Break
+  ElseIf ev = #PB_Event_Menu 
+    Select EventMenu() 
+      Case #change_hk
+        InputRequester(#Myname,"Please press new hotkey","Ctrl+Alt+D")
+      Case #Exit
+        Break
+    EndSelect
   EndIf
 Until ev=#PB_Event_CloseWindow
 
