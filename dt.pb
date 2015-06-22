@@ -7,6 +7,8 @@ Enumeration
   #change_hk
 EndEnumeration
 
+IncludeFile "hotkey-requester.pb"
+
 Structure _GlobalHotkeys
   window.l
   event.l
