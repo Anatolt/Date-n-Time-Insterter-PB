@@ -1,10 +1,11 @@
-﻿#Myname = "Date-n-time-inserter-v0.3"
+﻿#Myname = "Date-n-time-inserter-v0.4"
 Enumeration
   #Window
   #SysTrayIcon
   #Menu
   #Exit
   #change_hk
+  #strShowHideHK
 EndEnumeration
 
 IncludeFile "hotkey-requester.pb"
@@ -28,18 +29,18 @@ Procedure AddGlobalHotkey(window,event,modifiers,vk)
   ProcedureReturn result
 EndProcedure
 
-; Procedure RemoveGlobalHotkey(window,event)
-; Define.l result
-;  ForEach GlobalHotkeys()
-;   If (GlobalHotkeys()\window=window) And (GlobalHotkeys()\event=event) : Break :  EndIf
-;   ProcedureReturn #False
-;  Next
-;  result=UnregisterHotKey_(WindowID(window),event)
-;  If result
-;   DeleteElement(GlobalHotkeys(),1)
-;  EndIf
-;  ProcedureReturn result
-; EndProcedure
+Procedure RemoveGlobalHotkey(window,event)
+Define.l result
+ ForEach GlobalHotkeys()
+  If (GlobalHotkeys()\window=window) And (GlobalHotkeys()\event=event) : Break :  EndIf
+  ProcedureReturn #False
+ Next
+ result=UnregisterHotKey_(WindowID(window),event)
+ If result
+  DeleteElement(GlobalHotkeys(),1)
+ EndIf
+ ProcedureReturn result
+EndProcedure
 
 Procedure RemoveAllGlobalHotkeys()
   ForEach GlobalHotkeys()
@@ -105,7 +106,20 @@ Repeat
   ElseIf ev = #PB_Event_Menu 
     Select EventMenu() 
       Case #change_hk
-        InputRequester(#Myname,"Please press new hotkey","Ctrl+Alt+D")
+        If isHotkey(hkShowHide)
+          ;If the hotkey was already set, delete it before showing requester again
+          RemoveHotkey(hkShowHide)
+          RemoveGlobalHotkey(#Window,#VK_D)
+        EndIf
+        txt2$ = "Press the key combination you want to associate with this action"
+        hkShowHide = HotkeyRequester(#Window, #Myname, txt2$, @pasteStuff())
+        
+        If hkShowHide
+          SetMenuItemText(#Menu,#change_hk, "Hotkey: "+HotkeyFriendlyName(hkShowHide))
+        Else
+          SetMenuItemText(#Menu,#change_hk, "Hotkey: None")
+        EndIf
+        
       Case #Exit
         Break
     EndSelect
