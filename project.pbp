@@ -7,16 +7,12 @@
   <section name="data">
     <explorer view="..\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2015-06-22 12:02" user="Tolik" host="R580"/>
+    <lastopen date="2015-06-23 20:21" user="Tolik" host="R580"/>
   </section>
   <section name="files">
     <file name="dt.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="7a5da81aad24940f0105bf1aa5a92cb4"/>
-    </file>
-    <file name="hotkey-requester.pb">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="c6cb7b5f14c6849bc624d8766517c18a"/>
+      <fingerprint md5="5d35303d1d25915bbdb408488f8a3a00"/>
     </file>
   </section>
   <section name="targets">

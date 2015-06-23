@@ -1,4 +1,4 @@
-﻿#Myname = "Date-n-time-inserter-v0.4"
+﻿#Myname = "Date-n-time-inserter-v0.6"
 Enumeration
   #Window
   #SysTrayIcon
@@ -40,6 +40,7 @@ Define.l result
   DeleteElement(GlobalHotkeys(),1)
  EndIf
  ProcedureReturn result
+ Debug 1
 EndProcedure
 
 Procedure RemoveAllGlobalHotkeys()
@@ -50,15 +51,24 @@ Procedure RemoveAllGlobalHotkeys()
 EndProcedure
 
 Procedure pasteStuff()
-  ;   Repeat 
-  ;     Delay(10)
-  ;   Until #WM_KEYDOWN
+; continue if all keys are free
+Repeat
+  For i = 0 To 1000
+    If GetKeyState_(i) <= -1
+      Break
+    ElseIf i = 1000
+      Debug "all keys are free"
+      Break 2
+    EndIf
+  Next
+  Delay(10)
+ForEver
   Define n.INPUT
   n\type = #INPUT_KEYBOARD
   txt$ = FormatDate("%yyyy.%mm.%dd %hh:%ii",Date())
   SetClipboardText(txt$)
   AddGadgetItem(textField,-1,txt$)
-  Delay(1000)
+;   Delay(1000)
   n\ki\wVk = #VK_CONTROL : n\ki\dwFlags = 0
   SendInput_(1,@n,SizeOf(n))
   n\ki\wVk = #VK_V
