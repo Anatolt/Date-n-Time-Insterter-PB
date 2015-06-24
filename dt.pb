@@ -1,74 +1,42 @@
-﻿#Myname = "Date-n-time-inserter-v0.6"
+﻿#Myname = "Date-n-time-inserter-v0.7"
+
 Enumeration
   #Window
   #SysTrayIcon
   #Menu
   #Exit
   #change_hk
-  #strShowHideHK
 EndEnumeration
 
 IncludeFile "hotkey-requester.pb"
 
-Structure _GlobalHotkeys
-  window.l
-  event.l
-EndStructure
-Global NewList GlobalHotkeys._GlobalHotkeys()
-appname.s = GetFilePart(ProgramFilename())
-
-Procedure AddGlobalHotkey(window,event,modifiers,vk)
-  Define.l result
-  result=RegisterHotKey_(WindowID(window),event,modifiers,vk)
-  If result
-    LastElement(GlobalHotkeys())
-    AddElement(GlobalHotkeys())
-    GlobalHotkeys()\window=window
-    GlobalHotkeys()\event=event
+Procedure myWinCallback(hWnd.i, uMsg.i, wParam.i, lParam.i)
+  
+  If uMsg = #WM_HOTKEY
+    WM_HOTKEY_Event(wParam, lParam)
   EndIf
-  ProcedureReturn result
-EndProcedure
-
-Procedure RemoveGlobalHotkey(window,event)
-Define.l result
- ForEach GlobalHotkeys()
-  If (GlobalHotkeys()\window=window) And (GlobalHotkeys()\event=event) : Break :  EndIf
-  ProcedureReturn #False
- Next
- result=UnregisterHotKey_(WindowID(window),event)
- If result
-  DeleteElement(GlobalHotkeys(),1)
- EndIf
- ProcedureReturn result
- Debug 1
-EndProcedure
-
-Procedure RemoveAllGlobalHotkeys()
-  ForEach GlobalHotkeys()
-    UnregisterHotKey_(WindowID(GlobalHotkeys()\window),GlobalHotkeys()\event)
-    DeleteElement(GlobalHotkeys(),0)
-  Next
+  
+  ProcedureReturn #PB_ProcessPureBasicEvents
 EndProcedure
 
 Procedure pasteStuff()
-; continue if all keys are free
-Repeat
-  For i = 0 To 1000
-    If GetKeyState_(i) <= -1
-      Break
-    ElseIf i = 1000
-      Debug "all keys are free"
-      Break 2
-    EndIf
-  Next
-  Delay(10)
-ForEver
+  Protected i.i, txt$
+  ; continue if all keys are free
+  Repeat
+    For i = 0 To 1000
+      If GetKeyState_(i) <= -1
+        Break
+      ElseIf i = 1000
+        Debug "all keys are free"
+        Break 2
+      EndIf
+    Next
+    Delay(10)
+  ForEver
   Define n.INPUT
   n\type = #INPUT_KEYBOARD
   txt$ = FormatDate("%yyyy.%mm.%dd %hh:%ii",Date())
   SetClipboardText(txt$)
-  AddGadgetItem(textField,-1,txt$)
-;   Delay(1000)
   n\ki\wVk = #VK_CONTROL : n\ki\dwFlags = 0
   SendInput_(1,@n,SizeOf(n))
   n\ki\wVk = #VK_V
@@ -79,23 +47,13 @@ ForEver
   SendInput_(1,@n,SizeOf(n))
 EndProcedure
 
-Procedure WindowCallback(hwnd,msg,wparam,lparam)
-  result=#PB_ProcessPureBasicEvents
-  Select msg 
-    Case #WM_HOTKEY
-      pasteStuff()
-      ;       If wparam=#VK_MEDIA_PLAY_PAUSE
-      ;         Debug "#VK_MEDIA_PLAY_PAUSE pressed"
-      ;         result=#False
-      ;       EndIf
-  EndSelect
-  ProcedureReturn result
-EndProcedure 
-
-OpenWindow(#Window,0,0,400,200,#Myname,#PB_Window_Invisible) ;#PB_Window_Invisible #PB_Window_SystemMenu
-MessageRequester(#Myname,"Press Ctlr+Alt+D to paste timestamp")
+Define ev.i, hkInsTimestamp.i, txt2.s = "Press the key combination you want To associate With this action", 
+icon, appname.s = GetFilePart(ProgramFilename())
+OpenWindow(#Window, 0, 0, 500, 500, #Myname, #PB_Window_Invisible)
+SetWindowCallback(@myWinCallback(), #Window)
 icon = ExtractIcon_(WindowID(#Window),appname,0)
-AddSysTrayIcon(1,WindowID(#Window),icon)
+AddSysTrayIcon(#SysTrayIcon,WindowID(#Window),icon)
+SendMessage_(WindowID(#Window),#WM_SETICON,#ICON_SMALL,icon)
 SysTrayIconToolTip(#SysTrayIcon,#Myname)
 CreatePopupMenu(#Menu)
 MenuItem(1,#Myname)
@@ -103,29 +61,24 @@ DisableMenuItem(#Menu,1,1)
 MenuBar()
 MenuItem(#change_hk,"Change Hotkey")
 MenuItem(#Exit,"Exit")
-textField = EditorGadget(0,0,0,400,200)
-If AddGlobalHotkey(#Window,#VK_D,#MOD_CONTROL|#MOD_ALT,#VK_D)=#False
-  MessageRequester(#Myname,"Failed to register hotkey")
-EndIf
-SetWindowCallback(@WindowCallback(),#Window)
+HotkeyRequester(#Window, #Myname, txt2, @pasteStuff())
 
 Repeat
-  ev=WaitWindowEvent()
+  ev = WaitWindowEvent()
   If ev = #PB_Event_SysTray And EventType() = #PB_EventType_RightClick
     DisplayPopupMenu(#Menu,WindowID(#Window))
   ElseIf ev = #PB_Event_Menu 
     Select EventMenu() 
       Case #change_hk
-        If isHotkey(hkShowHide)
+        If isHotkey(hkInsTimestamp)
           ;If the hotkey was already set, delete it before showing requester again
-          RemoveHotkey(hkShowHide)
-          RemoveGlobalHotkey(#Window,#VK_D)
+          RemoveHotkey(hkInsTimestamp)
         EndIf
-        txt2$ = "Press the key combination you want to associate with this action"
-        hkShowHide = HotkeyRequester(#Window, #Myname, txt2$, @pasteStuff())
         
-        If hkShowHide
-          SetMenuItemText(#Menu,#change_hk, "Hotkey: "+HotkeyFriendlyName(hkShowHide))
+        hkInsTimestamp = HotkeyRequester(#Window, #Myname, txt2, @pasteStuff())
+        
+        If hkInsTimestamp
+          SetMenuItemText(#Menu,#change_hk, "Hotkey: "+HotkeyFriendlyName(hkInsTimestamp))
         Else
           SetMenuItemText(#Menu,#change_hk, "Hotkey: None")
         EndIf
@@ -134,6 +87,5 @@ Repeat
         Break
     EndSelect
   EndIf
-Until ev=#PB_Event_CloseWindow
-
-RemoveAllGlobalHotkeys()
+Until ev = #PB_Event_CloseWindow
+RemoveHotkey(#PB_All)
